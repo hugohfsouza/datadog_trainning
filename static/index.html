@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Person CRUD</title>
+    <script>
+        async function loadPeople() {
+            const res = await fetch('/people/');
+            const people = await res.json();
+            const table = document.getElementById('people');
+            table.innerHTML = '';
+            people.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${p.id}</td><td>${p.name}</td><td>${p.age}</td><td><button onclick="deletePerson(${p.id})">Delete</button></td>`;
+                table.appendChild(row);
+            });
+        }
+
+        async function createPerson() {
+            const id = document.getElementById('id').value;
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            await fetch('/people/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: parseInt(id), name: name, age: parseInt(age) })
+            });
+            document.getElementById('id').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            loadPeople();
+        }
+
+        async function deletePerson(id) {
+            await fetch('/people/' + id, { method: 'DELETE' });
+            loadPeople();
+        }
+
+        window.onload = loadPeople;
+    </script>
+</head>
+<body>
+    <h1>Person CRUD</h1>
+    <form onsubmit="createPerson(); return false;">
+        <input id="id" type="number" placeholder="ID" required>
+        <input id="name" type="text" placeholder="Name" required>
+        <input id="age" type="number" placeholder="Age" required>
+        <button type="submit">Create</button>
+    </form>
+    <table border="1">
+        <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Actions</th></tr></thead>
+        <tbody id="people"></tbody>
+    </table>
+</body>
+</html>
