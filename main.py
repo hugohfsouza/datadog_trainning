@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List
 
 app = FastAPI()
 
@@ -18,6 +18,11 @@ async def create_person(person: Person):
         raise HTTPException(status_code=400, detail="Person already exists")
     people_db[person.id] = person
     return person
+
+# Endpoint to retrieve all people
+@app.get("/people/", response_model=List[Person])
+async def list_people():
+    return list(people_db.values())
 
 @app.get("/people/{person_id}", response_model=Person)
 async def read_person(person_id: int):
