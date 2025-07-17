@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict
 from ddtrace import tracer, patch_all
-patch_all()
 
+from typing import Dict, List
+
+patch_all()
 app = FastAPI()
 
 class Person(BaseModel):
@@ -21,6 +23,13 @@ async def create_person(person: Person):
         raise HTTPException(status_code=400, detail="Person already exists")
     people_db[person.id] = person
     return person
+
+
+# Endpoint to retrieve all people
+@tracer.wrap()
+@app.get("/people/", response_model=List[Person])
+async def list_people():
+    return list(people_db.values())
 
 @tracer.wrap()
 @app.get("/people/{person_id}", response_model=Person)
