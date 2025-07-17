@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict
+from ddtrace import tracer, patch_all
+patch_all()
 
 app = FastAPI()
 
@@ -12,6 +14,7 @@ class Person(BaseModel):
 # In-memory 'database'
 people_db: Dict[int, Person] = {}
 
+@tracer.wrap()
 @app.post("/people/", response_model=Person)
 async def create_person(person: Person):
     if person.id in people_db:
@@ -19,6 +22,7 @@ async def create_person(person: Person):
     people_db[person.id] = person
     return person
 
+@tracer.wrap()
 @app.get("/people/{person_id}", response_model=Person)
 async def read_person(person_id: int):
     person = people_db.get(person_id)
@@ -26,6 +30,7 @@ async def read_person(person_id: int):
         raise HTTPException(status_code=404, detail="Person not found")
     return person
 
+@tracer.wrap()
 @app.put("/people/{person_id}", response_model=Person)
 async def update_person(person_id: int, person: Person):
     if person_id != person.id:
@@ -35,6 +40,7 @@ async def update_person(person_id: int, person: Person):
     people_db[person_id] = person
     return person
 
+@tracer.wrap()
 @app.delete("/people/{person_id}")
 async def delete_person(person_id: int):
     if person_id not in people_db:
